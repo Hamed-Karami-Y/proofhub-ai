@@ -63,7 +63,7 @@ namespace backend.Services.Proof
 
             return new AuditRecord
             {
-                AuditId = Guid.NewGuid(),
+                AuditRecordId = Guid.NewGuid(),
                 WalletAddress = walletAddress,
                 Model = model,
                 ModelVersion = modelVersion,

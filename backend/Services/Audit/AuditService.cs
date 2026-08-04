@@ -1,6 +1,8 @@
-﻿using backend.Interfaces.Services;
+﻿using backend.Data;
+using backend.Interfaces.Services;
 using backend.Models.AI;
 using backend.Models.Audit;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services.Audit
 {
@@ -8,13 +10,16 @@ namespace backend.Services.Audit
     {
         private readonly IAIProvider _aiProvider;
         private readonly IProofEngineService _proofEngineService;
+        private readonly ApplicationDbContext _dbContext;
 
         public AuditService(
             IAIProvider aiProvider,
-            IProofEngineService proofEngineService)
+            IProofEngineService proofEngineService,
+            ApplicationDbContext dbContext)
         {
             _aiProvider = aiProvider;
             _proofEngineService = proofEngineService;
+            _dbContext = dbContext;
         }
 
         public async Task<AuditRecord> CreateAuditAsync(
@@ -29,6 +34,10 @@ namespace backend.Services.Audit
                 aiResponse.ModelVersion,
                 prompt,
                 aiResponse.Output);
+
+            _dbContext.AuditRecords.Add(auditRecord);
+
+            await _dbContext.SaveChangesAsync();
 
             return auditRecord;
         }

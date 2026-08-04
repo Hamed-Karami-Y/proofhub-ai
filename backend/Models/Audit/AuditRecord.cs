@@ -4,7 +4,7 @@ namespace backend.Models.Audit
 {
     public class AuditRecord
     {
-        public Guid AuditId { get; set; }
+        public Guid AuditRecordId { get; set; } = Guid.NewGuid();
 
         public string WalletAddress { get; set; } = string.Empty;
 

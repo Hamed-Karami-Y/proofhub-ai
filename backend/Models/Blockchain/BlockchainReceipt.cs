@@ -1,7 +1,12 @@
-﻿namespace backend.Models.Blockchain
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace backend.Models.Blockchain
 {
     public class BlockchainReceipt
     {
+        [Key]
+        public int Id { get; set; }
+
         public string Network { get; set; } = string.Empty;
 
         public string ContractAddress { get; set; } = string.Empty;

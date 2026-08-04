@@ -1,6 +1,8 @@
 
+using backend.Data;
 using backend.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -31,6 +33,11 @@ builder.Services.AddCors(options =>
         });
 });
 
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"));
+});
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
