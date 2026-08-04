@@ -4,6 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>d9c5a8bf-4ccb-4f39-8b66-05fc16ff1026</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,11 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Interfaces\" />
-    <Folder Include="DTOs\" />
-    <Folder Include="Controllers\" />
     <Folder Include="Middleware\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

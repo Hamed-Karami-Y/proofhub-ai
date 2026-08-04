@@ -31,21 +31,6 @@ builder.Services.AddCors(options =>
         });
 });
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]!))
-        };
-    });
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -59,32 +44,13 @@ builder.Services.AddHttpClient();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() { Title = "ProofHub API", Version = "v1" });
-
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    c.SwaggerDoc("v1", new()
     {
-        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
+        Title = "ProofHub API",
+        Version = "v1"
     });
 });
 
@@ -106,8 +72,6 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors();
-app.UseAuthentication();
-app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
