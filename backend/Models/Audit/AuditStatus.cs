@@ -3,7 +3,7 @@
     public enum AuditStatus
     {
         Pending = 0,
-        Generated = 1,
+        Verified = 1,
         Anchored = 2,
         Failed = 3
     }

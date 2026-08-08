@@ -1,6 +1,7 @@
 
 using backend.Data;
 using backend.Extensions;
+using backend.Models.Config;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -10,6 +11,14 @@ using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var blockchainSection = builder.Configuration.GetSection("Blockchain");
+if (!blockchainSection.Exists())
+{
+    throw new InvalidOperationException("Blockchain configuration section is missing!");
+}
+
+builder.Services.Configure<BlockchainSettings>(blockchainSection);
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("WithAuthPolicy",
@@ -18,6 +27,7 @@ builder.Services.AddCors(options =>
             policy.WithOrigins(
                     "http://localhost:3000",
                     "http://localhost:4200",
+                    "http://localhost:5173",
                     "https://proofhub-ai.yukaha.com"
                 )
                 .WithMethods("GET", "POST", "PUT", "DELETE")
@@ -78,7 +88,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
-app.UseCors();
+app.UseCors("WithAuthPolicy");
 app.MapControllers();
 
 app.Run();
