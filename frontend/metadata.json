@@ -1,0 +1,6 @@
+{
+  "name": "ProofHub AI",
+  "description": "Verifiable proof infrastructure for AI workflows combining AI transparency with blockchain verification.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
