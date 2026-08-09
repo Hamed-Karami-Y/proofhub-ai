@@ -71,7 +71,7 @@ namespace backend.Services.Proof
                 OutputHash = outputHash,
                 ProofHash = proofHash,
                 CreatedAt = createdAt,
-                Status = AuditStatus.Generated
+                Status = AuditStatus.Verified
             };
         }
     }

@@ -23,5 +23,13 @@ namespace backend.Models.Audit
         public AuditStatus Status { get; set; }
 
         public BlockchainReceipt? Blockchain { get; set; }
+
+        public string? TransactionHash { get; set; }
+
+        public string? ContractAddress { get; set; }
+
+        public long? BlockNumber { get; set; }
+
+        public bool BlockchainVerified { get; set; }
     }
 }
