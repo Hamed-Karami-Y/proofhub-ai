@@ -43,6 +43,16 @@ namespace backend.Services.AI
                 "https://api.groq.com/openai/v1/chat/completions", 
                 request);
 
+            var body = await response.Content.ReadAsStringAsync();
+
+            Console.WriteLine($"AI STATUS: {(int)response.StatusCode}");
+            Console.WriteLine($"AI BODY: {body}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException(
+                    $"AI API failed: {(int)response.StatusCode} - {body}");
+            }
             response.EnsureSuccessStatusCode();
 
             var result = await response.Content.ReadFromJsonAsync<DeepSeekChatResponse>();

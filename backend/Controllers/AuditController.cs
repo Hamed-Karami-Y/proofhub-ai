@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace backend.Controllers
 {
     [ApiController]
-    [Route("api/audit")]
+    [Route("audit")]
     public class AuditController : ControllerBase
     {
         private readonly ApplicationDbContext _dbContext;
