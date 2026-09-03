@@ -113,17 +113,25 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 
-
-if (app.Environment.IsDevelopment())
+// اگر میخوای همیشه فعال باشه:
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+    // اگر برنامه در زیرمسیر هست:
+    // c.RoutePrefix = "swagger";
+});
 
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHsts();
-}
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseSwagger();
+//    app.UseSwaggerUI();
+//}
+
+//if (!app.Environment.IsDevelopment())
+//{
+//    app.UseHsts();
+//}
 
 app.UseHttpsRedirection();
 app.UseRouting();
