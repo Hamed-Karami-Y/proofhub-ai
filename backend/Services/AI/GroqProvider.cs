@@ -3,12 +3,12 @@ using backend.Models.AI;
 
 namespace backend.Services.AI
 {
-    public class DeepSeekProvider : IAIProvider
+    public class GroqProvider : IAIProvider
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
 
-        public DeepSeekProvider(
+        public GroqProvider(
             HttpClient httpClient,
             IConfiguration configuration)
         {
@@ -55,7 +55,7 @@ namespace backend.Services.AI
             }
             response.EnsureSuccessStatusCode();
 
-            var result = await response.Content.ReadFromJsonAsync<DeepSeekChatResponse>();
+            var result = await response.Content.ReadFromJsonAsync<GroqChatResponse>();
 
             return new AIResponse
             {

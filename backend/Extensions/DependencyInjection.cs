@@ -11,7 +11,7 @@ namespace backend.Extensions
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
             services.AddScoped<IAuditService, AuditService>();
-            services.AddHttpClient<IAIProvider, DeepSeekProvider>();
+            services.AddHttpClient<IAIProvider, GroqProvider>();
             services.AddScoped<IProofEngineService, ProofEngineService>();
             services.AddScoped<IHashService, HashService>();
             return services;
