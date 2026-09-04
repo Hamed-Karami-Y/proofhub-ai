@@ -1,94 +1,125 @@
-import { useAccount, useConnect, useSendTransaction,useWaitForTransactionReceipt  } from 'wagmi';
-import { parseEther } from 'viem';
+import { useAccount, useConnect, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi';
+import { encodeFunctionData } from 'viem';
 import { PROOF_REGISTRY_ADDRESS, PROOF_REGISTRY_ABI } from '../config/contract.js';
 import { generateAudit, confirmBlockchain } from '../services/api.js';
 import React, { useEffect, useState } from 'react';
-import { 
-  Sparkles, 
-  Send, 
-  AlertTriangle, 
-  ShieldCheck, 
-  Copy, 
-  Check, 
-  FileText, 
-  CheckCircle2, 
-  Lock 
+import {
+  Sparkles,
+  Send,
+  AlertTriangle,
+  ShieldCheck,
+  Copy,
+  Check,
+  FileText,
+  CheckCircle2,
+  Lock
 } from 'lucide-react';
 
+
 export default function CreateAudit() {
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
   const { connect } = useConnect();
-  const { sendTransactionAsync, data: txHash  } = useSendTransaction();
+  const { sendTransactionAsync, data: txHash } = useSendTransaction();
   const [prompt, setPrompt] = useState('');
-  const [model, setModel] = useState('gemini-2.5-flash');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [auditResult, setAuditResult] = useState(null);
   const [anchorSuccess, setAnchorSuccess] = useState(false);
   const [copiedHash, setCopiedHash] = useState(false);
   const [isSubmittingTx, setIsSubmittingTx] = useState(false);
-  const [isConfirmingTx, setIsConfirmingTx] = useState(false);
 
   const [recordId, setRecordId] = useState(null);
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-  hash: txHash,
-});
-useEffect(() => {
-  if (isConfirmed && txHash && recordId) {
-    const sendToBackend = async () => {
-      try {
-        console.log('recordId before confirm:', recordId);
-        await confirmBlockchain(recordId, txHash, PROOF_REGISTRY_ADDRESS);
-        setAnchorSuccess(true);
-        setIsSubmittingTx(false);
-        alert('✅ Proof anchored successfully!');
-      } catch (err) {
-        console.error('Backend confirm error:', err);
-        setError(err.message);
-      }
-    };
-    sendToBackend();
-  }
-}, [isConfirmed, txHash, recordId]);
+    hash: txHash,
+  }); 
+  
+  useEffect(() => {
+    if (isConfirmed && txHash && recordId) {
+      const sendToBackend = async () => {
+        try {
+          console.log('recordId before confirm:', recordId);
+          await confirmBlockchain(recordId, txHash, PROOF_REGISTRY_ADDRESS);
+          setAnchorSuccess(true);
+          setIsSubmittingTx(false);
+          alert('✅ Proof anchored successfully!');
+        } catch (err) {
+          console.error('Backend confirm error:', err);
+          setError(err.message);
+        }
+      };
+      sendToBackend();
+    }
+  }, [isConfirmed, txHash, recordId]);
+
   const examplePrompts = [
     'Analyze smart contract access control and identify possible reentrancy vulnerabilities.',
     'Verify cross-border transaction compliance against privacy and AML regulations.',
     'Audit AI credit-scoring model features for bias and algorithmic transparency.',
   ];
 
-  const handleSubmit = async (prompt) => {
-    if (!address) {
-      connect({ connector: 'metaMask' });
-      return;
-    }
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    // مرحله ۱: دریافت ProofHash از بک‌اند
-    const { recordId, proofHash, output } = await generateAudit(prompt, address);
+  if (!address) {
+    connect({ connector: 'metaMask' });
+    return;
+  }
 
-    setRecordId(recordId); // ← ذخیره کن
-    setAuditResult({ id: recordId, proofHash, aiResponse: output, timestamp: new Date().toISOString() });
-const formattedHash = formatToBytes32(auditResult.proofHash);
-    // مرحله ۲: امضای تراکنش با متامسک
-    const tx = await sendTransactionAsync({
-      to: PROOF_REGISTRY_ADDRESS,
-      data: new ethers.Interface(PROOF_REGISTRY_ABI).encodeFunctionData('registerProof', [formattedHash]),
-      // gas limit می‌توانید خودکار یا دستی تنظیم کنید
+  const promptText = prompt.trim();
+
+  if (!promptText) {
+    return;
+  }
+
+  setLoading(true);
+  setError(null);
+
+  try {
+    console.log('Calling /api/ai/generate...', {
+      walletAddress: address,
+      prompt: promptText,
     });
-    const receipt = await tx.wait();
 
-    // مرحله ۳: ارسال TransactionHash به بک‌اند
-    await confirmBlockchain(recordId, receipt.transactionHash, PROOF_REGISTRY_ADDRESS);
+    const { recordId, proofHash, output } =
+      await generateAudit(promptText, address);
 
-    alert('Proof registered successfully!');
-  };
-const handleAnchorOnChain = async () => {
-        console.log('recordId before Anchor:', recordId);
+    console.log('AI Generate Response:', {
+      recordId,
+      proofHash,
+      output,
+    });
+
+    setRecordId(recordId);
+
+    setAuditResult({
+      id: recordId,
+      proofHash,
+      aiResponse: output,
+      timestamp: new Date().toISOString(),
+    });
+
+  } catch (err) {
+    console.error('Generate audit failed:', err);
+
+    setError(
+      err.response?.data?.error ||
+      err.message ||
+      'Failed to generate audit.'
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
+ const handleAnchorOnChain = async () => {
+  console.log('recordId before Anchor:', recordId);
 
   if (!address) {
     alert('Please connect wallet first.');
     return;
   }
+
   if (!recordId || !auditResult?.proofHash) {
     alert('No proof hash to anchor. Please generate an audit first.');
     return;
@@ -98,13 +129,19 @@ const handleAnchorOnChain = async () => {
   setError(null);
 
   try {
-    const formattedHash = formatToBytes32(auditResult.proofHash);
-    // فقط تراکنش را ارسال می‌کنیم (بدون wait)
+    const proofHash = auditResult.proofHash.startsWith('0x')
+      ? auditResult.proofHash
+      : `0x${auditResult.proofHash}`;
+
     await sendTransactionAsync({
       to: PROOF_REGISTRY_ADDRESS,
-      data: new ethers.Interface(PROOF_REGISTRY_ABI).encodeFunctionData('registerProof', [formattedHash]),
+      data: encodeFunctionData({
+        abi: PROOF_REGISTRY_ABI,
+        functionName: 'registerProof',
+        args: [proofHash],
+      }),
     });
-    // useEffect ادامه کار را انجام می‌دهد
+
   } catch (err) {
     console.error('Send tx error:', err);
     setError(err.message || 'Transaction submission failed');
@@ -113,18 +150,18 @@ const handleAnchorOnChain = async () => {
 };
   const connectMetaMask = () => connect({ connector: 'metaMask' });
 
-const formatDate = (date) => {
-  if (!date) return 'N/A';
-  return new Date(date).toLocaleString();
-};
+  const formatDate = (date) => {
+    if (!date) return 'N/A';
+    return new Date(date).toLocaleString();
+  };
 
-const handleCopyHash = async () => {
-  if (auditResult?.proofHash) {
-    await navigator.clipboard.writeText(auditResult.proofHash);
-    setCopiedHash(true);
-    setTimeout(() => setCopiedHash(false), 2000);
-  }
-};
+  const handleCopyHash = async () => {
+    if (auditResult?.proofHash) {
+      await navigator.clipboard.writeText(auditResult.proofHash);
+      setCopiedHash(true);
+      setTimeout(() => setCopiedHash(false), 2000);
+    }
+  };
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
       {/* Title */}
@@ -177,15 +214,7 @@ const handleCopyHash = async () => {
           {/* Model Selection & Submit Button */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-800/60">
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              <span className="text-xs text-slate-400 font-mono">Model:</span>
-              <select
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                className="bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-lg px-3 py-2 font-mono focus:outline-none"
-              >
-                <option value="gemini-2.5-flash">Gemini 2.5 Flash Audit</option>
-                <option value="gemini-2.5-pro">Gemini 2.5 Pro Compliance</option>
-              </select>
+              
             </div>
 
             <button
@@ -313,14 +342,14 @@ const handleCopyHash = async () => {
               </button>
             ) : (
               <button
-  onClick={handleAnchorOnChain}
-  disabled={isSubmittingTx || isConfirming || anchorSuccess}
->
-  {isSubmittingTx && 'Confirm in Wallet...'}
-  {isConfirming && 'Mining Transaction...'}
-  {anchorSuccess && '✅ Anchored On-Chain'}
-  {!isSubmittingTx && !isConfirming && !anchorSuccess && 'Anchor Proof to Blockchain'}
-</button>
+                onClick={handleAnchorOnChain}
+                disabled={isSubmittingTx || isConfirming || anchorSuccess}
+              >
+                {isSubmittingTx && 'Confirm in Wallet...'}
+                {isConfirming && 'Mining Transaction...'}
+                {anchorSuccess && '✅ Anchored On-Chain'}
+                {!isSubmittingTx && !isConfirming && !anchorSuccess && 'Anchor Proof to Blockchain'}
+              </button>
             )}
           </div>
         </div>

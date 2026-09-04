@@ -19,7 +19,7 @@ export default function Dashboard() {
   const { isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: txHash });
   const [pendingAudit, setPendingAudit] = useState(null);
 
-useEffect(() => {
+  useEffect(() => {
     if (isConfirmed && txHash && pendingAudit) {
       const confirm = async () => {
         await confirmBlockchain(pendingAudit.id, txHash, PROOF_REGISTRY_ADDRESS);
@@ -52,16 +52,16 @@ useEffect(() => {
   }, []);
 
   // قبل از استفاده، این تابع را تعریف کنید
-function formatToBytes32(hash) {
-  // اگر 0x در ابتدا نیست، اضافه کن
-  let clean = hash.startsWith('0x') ? hash : '0x' + hash;
-  // اگر طول کمتر از 66 کاراکتر است (0x + 64)، با 0 پر کن
-  while (clean.length < 66) {
-    clean = clean.slice(0, 2) + '0' + clean.slice(2);
+  function formatToBytes32(hash) {
+    // اگر 0x در ابتدا نیست، اضافه کن
+    let clean = hash.startsWith('0x') ? hash : '0x' + hash;
+    // اگر طول کمتر از 66 کاراکتر است (0x + 64)، با 0 پر کن
+    while (clean.length < 66) {
+      clean = clean.slice(0, 2) + '0' + clean.slice(2);
+    }
+    // اگر بیشتر است، کوتاه کن
+    return clean.slice(0, 66);
   }
-  // اگر بیشتر است، کوتاه کن
-  return clean.slice(0, 66);
-}
 
   const handleVerifyOnChain = async (audit) => {
     if (!address) {
@@ -72,10 +72,10 @@ function formatToBytes32(hash) {
     try {
       const formattedHash = formatToBytes32(audit.proofHash);
 
-const tx = await sendTransactionAsync({
-  to: PROOF_REGISTRY_ADDRESS,
-  data: new ethers.Interface(PROOF_REGISTRY_ABI).encodeFunctionData('registerProof', [formattedHash]),
-});
+      const tx = await sendTransactionAsync({
+        to: PROOF_REGISTRY_ADDRESS,
+        data: new ethers.Interface(PROOF_REGISTRY_ABI).encodeFunctionData('registerProof', [formattedHash]),
+      });
     } catch (err) {
       console.error(err);
       setPendingAudit(null);
@@ -86,7 +86,7 @@ const tx = await sendTransactionAsync({
   const verifiedCount = audits.filter(a => a.status === 'verified' || a.status === 'registered').length;
   const pendingCount = totalAudits - verifiedCount;
 
-  
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header Banner */}

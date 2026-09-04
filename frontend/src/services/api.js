@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_URL || 'https://localhost:7056'; // آدرس بک‌اند
+const baseURL = import.meta.env.VITE_API_URL || 'https://api-proofhub-ai.yukaha.com'; // آدرس بک‌اند
 
 export const apiClient = axios.create({
   baseURL,
@@ -10,7 +10,7 @@ export const apiClient = axios.create({
 
 export async function createAuditApi(prompt, model = 'gemini-2.5-flash') {
   try {
-    const response = await apiClient.post('/api/audit/create', { prompt, model });
+    const response = await apiClient.post('/audit/create', { prompt, model });
     return response.data;
   } catch (error) {
     console.error('API createAudit error:', error);
@@ -23,23 +23,23 @@ export async function createAuditApi(prompt, model = 'gemini-2.5-flash') {
 }
 
 export async function getAllAuditsApi() {
-  const response = await apiClient.get('/api/audit');
+  const response = await apiClient.get('/audit');
   return response.data;
 }
 
 export async function getAuditApi(id) {
-  const response = await apiClient.get(`/api/audit/${id}`);
+  const response = await apiClient.get(`/audit/${id}`);
   return response.data;
 }
 
 export async function verifyAuditApi({ auditId, proofHash }) {
-  const response = await apiClient.post('/api/audit/verify', { auditId, proofHash });
+  const response = await apiClient.post('/audit/verify', { auditId, proofHash });
   return response.data;
 }
 
 export async function generateAudit(prompt, walletAddress) {
   try {
-    const response = await apiClient.post('/api/ai/generate', {
+    const response = await apiClient.post('/ai/generate', {
       walletAddress,
       prompt,
     });
@@ -52,7 +52,7 @@ export async function generateAudit(prompt, walletAddress) {
 
 export async function confirmBlockchain(recordId, transactionHash, contractAddress) {
   try {
-    const response = await apiClient.post('/api/ai/confirm', {
+    const response = await apiClient.post('/ai/confirm', {
       recordId,
       transactionHash,
       contractAddress,
