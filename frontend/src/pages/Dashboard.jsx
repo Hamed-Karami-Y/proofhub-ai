@@ -18,12 +18,14 @@ export default function Dashboard() {
   const { sendTransactionAsync, data: txHash } = useSendTransaction();
   const { isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: txHash });
   const [pendingAudit, setPendingAudit] = useState(null);
+  const [isAnchoring, setIsAnchoring] = useState(false);
 
   useEffect(() => {
     if (isConfirmed && txHash && pendingAudit) {
       const confirm = async () => {
-        await confirmBlockchain(pendingAudit.id, txHash, PROOF_REGISTRY_ADDRESS);
+        await confirmBlockchain(pendingAudit.auditRecordId, txHash, PROOF_REGISTRY_ADDRESS);
         setPendingAudit(null);
+        setIsAnchoring(false);
         await fetchAudits();
         alert('✅ Proof anchored!');
       };
@@ -64,11 +66,13 @@ export default function Dashboard() {
   }
 
   const handleVerifyOnChain = async (audit) => {
+    
     if (!address) {
       alert('Please connect wallet first.');
       return;
     }
-    setPendingAudit(audit);
+   setPendingAudit(audit);
+   setIsAnchoring(true);
     try {
       const formattedHash = formatToBytes32(audit.proofHash);
 
@@ -79,11 +83,12 @@ export default function Dashboard() {
     } catch (err) {
       console.error(err);
       setPendingAudit(null);
+      setIsAnchoring(false);
     }
   };
 
   const totalAudits = audits.length;
-  const verifiedCount = audits.filter(a => a.status === 'verified' || a.status === 'registered').length;
+  const verifiedCount = audits.filter(a => a.blockchainVerified === true).length;
   const pendingCount = totalAudits - verifiedCount;
 
 
@@ -103,6 +108,7 @@ export default function Dashboard() {
 
         <div className="flex items-center gap-3">
           <button
+          disabled={isAnchoring}
             onClick={fetchAudits}
             className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700/80 transition-colors cursor-pointer"
             title="Refresh Audits"
@@ -112,6 +118,9 @@ export default function Dashboard() {
 
           <Link
             to="/create"
+            onClick={(e) => {
+    if (isAnchoring) e.preventDefault();
+  }}
             className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-medium text-sm rounded-xl shadow-lg shadow-cyan-950/30 transition-all"
           >
             <PlusCircle className="w-4 h-4" />
@@ -235,10 +244,12 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {audits.slice(0, 6).map((audit) => (
               <AuditCard
-                key={audit.id}
-                audit={audit}
-                onVerifyOnChain={handleVerifyOnChain}
-              />
+  key={audit.auditRecordId}
+  audit={audit}
+  onVerifyOnChain={handleVerifyOnChain}
+  isAnchoring={isAnchoring}
+  isPending={pendingAudit?.auditRecordId === audit.auditRecordId}
+/>
             ))}
           </div>
         )}

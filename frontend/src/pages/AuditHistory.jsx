@@ -13,6 +13,7 @@ export default function AuditHistory() {
   const [selectedAudit, setSelectedAudit] = useState(null);
   const [copiedHash, setCopiedHash] = useState(null);
 
+  
   const fetchAudits = async () => {
     setLoading(true);
     setError(null);
@@ -132,8 +133,7 @@ const filteredAudits = audits.filter(
               </thead>
               <tbody className="divide-y divide-slate-800/60 text-xs">
                 {filteredAudits.map((audit) => {
-                  const isVerified = audit.status === 'verified' || audit.status === 'registered';
-
+                  const isVerified = audit.blockchainVerified === true;
                   return (
                     <tr key={audit.auditRecordId} className="hover:bg-slate-800/40 transition-colors">
                       {/* Audit ID */}
@@ -199,7 +199,7 @@ const filteredAudits = audits.filter(
                           </button>
 
                           <Link
-                            to={`/verify?auditId=${audit.auditRecordId}`}
+                            to={`/verify?auditId=${audit.proofHash}`}
                             className="px-2.5 py-1.5 bg-cyan-950 hover:bg-cyan-900 text-cyan-300 rounded-lg text-xs font-medium flex items-center gap-1 border border-cyan-800/60"
                           >
                             <ExternalLink className="w-3.5 h-3.5 text-cyan-400" />
@@ -265,7 +265,7 @@ const filteredAudits = audits.filter(
                 Close
               </button>
               <Link
-                to={`/verify?auditId=${selectedAudit.auditRecordId}`}
+                to={`/verify?auditId=${selectedAudit.proofHash}`}
                 className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-semibold"
               >
                 Go to Verification Page

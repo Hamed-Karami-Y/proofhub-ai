@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { verifyAuditApi } from '../services/api.js';
+import { getAuditByIdApi, verifyAuditApi ,getAuditApi} from '../services/api.js';
 import { verifyProofOnChain } from '../services/blockchain.js';
 import { formatDate, formatHash, copyToClipboard } from '../utils/format.js';
 import Loading from '../components/Loading.jsx';
@@ -17,45 +17,85 @@ export default function VerifyAudit() {
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
 
+  // توابع تشخیص نوع ورودی
+const isGuid = (str) => {
+  const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return guidRegex.test(str);
+};
+
+const isHexHash = (str) => {
+  return /^[0-9a-f]{64}$/i.test(str);
+};
   const handleVerify = async (queryToUse) => {
-    const query = (queryToUse || inputQuery).trim();
-    if (!query) return;
+  const query = (queryToUse || inputQuery).trim();
+  if (!query) return;
+    
+  setLoading(true);
+  setError(null);
+  setVerificationResult(null);
+  setOnChainData(null);
 
-    setLoading(true);
-    setError(null);
-    setVerificationResult(null);
-    setOnChainData(null);
+  try {
+    let proofHash = query;
 
-    try {
-      // Determine if query is auditId or proofHash
-      const payload = query.startsWith('0x') ? { proofHash: query } : { auditId: query };
-
-      // Call Backend Verification API
-      const apiResult = await verifyAuditApi(payload);
-      setVerificationResult(apiResult);
-
-      // Query Smart Contract On-Chain Proof directly via viem/blockchain service
-      const proofHashToQuery = apiResult?.audit?.proofHash || (query.startsWith('0x') ? query : null);
-      if (proofHashToQuery) {
-        const chainRes = await verifyProofOnChain(proofHashToQuery);
-        setOnChainData(chainRes);
+    // اگر ورودی GUID بود (auditId)
+    if (isGuid(query)) {
+      // ۱. اول اطلاعات audit رو با id بگیر
+      const auditResponse = await getAuditByIdApi(query);
+      console.log("auditResponse : ", auditResponse);
+      // const auditData = await getAuditByIdApi(query);
+      if (!auditResponse.ok) {
+        throw new Error('Audit not found');
       }
-    } catch (err) {
-      console.error('Verification error:', err);
-      setError(err.message || 'Verification failed for the given query.');
-      setVerificationResult({
-        success: false,
-        verified: false,
-        details: {
-          proofExists: false,
-          hashMatches: false,
-          noModificationDetected: false,
-        },
-      });
-    } finally {
-      setLoading(false);
+      const auditData = await auditResponse.json();
+      
+      if (!auditData || !auditData.proofHash) {
+        throw new Error('Audit has no proof hash');
+      }
+      proofHash = auditData.proofHash;
+    } 
+    // اگر ورودی هش نبود (نه GUID بود و نه هش)
+    else if (!isHexHash(query)) {
+      throw new Error('Invalid input: must be an Audit ID or a 64-character hex proof hash');
     }
-  };
+
+    // ۲. حالا با proofHash درخواست verify رو بزن
+    const payload = { proofHash };
+    const apiResult = await verifyAuditApi(payload);
+    
+    // ۳. تبدیل پاسخ به ساختار مورد انتظار کامپوننت
+    const transformedResult = {
+      verified: apiResult.valid || false,
+      details: {
+        proofExists: apiResult.valid || false,
+        hashMatches: apiResult.valid || false,
+        noModificationDetected: apiResult.valid || false,
+      },
+      audit: apiResult.audit || null
+    };
+
+    setVerificationResult(transformedResult);
+
+    // Query Smart Contract On-Chain Proof
+    if (proofHash) {
+      const chainRes = await verifyProofOnChain(proofHash);
+      setOnChainData(chainRes);
+    }
+  } catch (err) {
+    console.error('Verification error:', err);
+    setError(err.message || 'Verification failed for the given query.');
+    setVerificationResult({
+      verified: false,
+      details: {
+        proofExists: false,
+        hashMatches: false,
+        noModificationDetected: false,
+      },
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     if (initialAuditId) {

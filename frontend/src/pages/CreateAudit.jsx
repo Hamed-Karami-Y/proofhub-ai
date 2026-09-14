@@ -1,8 +1,9 @@
-import { useAccount, useConnect, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi';
-import { encodeFunctionData } from 'viem';
+import { useAccount, useConnect } from 'wagmi';
+import { useWallet } from '../hooks/useWallet.js';
 import { PROOF_REGISTRY_ADDRESS, PROOF_REGISTRY_ABI } from '../config/contract.js';
 import { generateAudit, confirmBlockchain } from '../services/api.js';
 import React, { useEffect, useState } from 'react';
+import Loading from '../components/Loading.jsx';
 import {
   Sparkles,
   Send,
@@ -19,38 +20,47 @@ import {
 export default function CreateAudit() {
   const { address, isConnected } = useAccount();
   const { connect } = useConnect();
-  const { sendTransactionAsync, data: txHash } = useSendTransaction();
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [auditResult, setAuditResult] = useState(null);
   const [anchorSuccess, setAnchorSuccess] = useState(false);
   const [copiedHash, setCopiedHash] = useState(false);
-  const [isSubmittingTx, setIsSubmittingTx] = useState(false);
-
+const {
+  registerProof,
+  txHash,
+  isSubmittingTx: walletSubmittingTx,
+  isConfirmingTx: walletConfirmingTx,
+  isTxConfirmed,
+  walletError,
+} = useWallet();
   const [recordId, setRecordId] = useState(null);
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-    hash: txHash,
-  }); 
-  
+
   useEffect(() => {
-    if (isConfirmed && txHash && recordId) {
-      const sendToBackend = async () => {
-        try {
-          console.log('recordId before confirm:', recordId);
-          await confirmBlockchain(recordId, txHash, PROOF_REGISTRY_ADDRESS);
-          setAnchorSuccess(true);
-          setIsSubmittingTx(false);
-          alert('✅ Proof anchored successfully!');
-        } catch (err) {
-          console.error('Backend confirm error:', err);
-          setError(err.message);
-        }
-      };
-      sendToBackend();
-    }
-  }, [isConfirmed, txHash, recordId]);
+  if (isTxConfirmed && txHash && recordId) {
+    const sendToBackend = async () => {
+      try {
+        console.log('recordId before confirm:', recordId);
+
+        await confirmBlockchain(
+          recordId,
+          txHash,
+          PROOF_REGISTRY_ADDRESS
+        );
+
+        setAnchorSuccess(true);
+
+        alert('✅ Proof anchored successfully!');
+      } catch (err) {
+        console.error('Backend confirm error:', err);
+        setError(err.message);
+      }
+    };
+
+    sendToBackend();
+  }
+}, [isTxConfirmed, txHash, recordId]);
 
   const examplePrompts = [
     'Analyze smart contract access control and identify possible reentrancy vulnerabilities.',
@@ -112,7 +122,7 @@ const handleSubmit = async (e) => {
   }
 };
 
- const handleAnchorOnChain = async () => {
+const handleAnchorOnChain = async () => {
   console.log('recordId before Anchor:', recordId);
 
   if (!address) {
@@ -125,27 +135,16 @@ const handleSubmit = async (e) => {
     return;
   }
 
-  setIsSubmittingTx(true);
   setError(null);
 
   try {
-    const proofHash = auditResult.proofHash.startsWith('0x')
-      ? auditResult.proofHash
-      : `0x${auditResult.proofHash}`;
-
-    await sendTransactionAsync({
-      to: PROOF_REGISTRY_ADDRESS,
-      data: encodeFunctionData({
-        abi: PROOF_REGISTRY_ABI,
-        functionName: 'registerProof',
-        args: [proofHash],
-      }),
-    });
-
+    await registerProof(auditResult.proofHash);
   } catch (err) {
-    console.error('Send tx error:', err);
-    setError(err.message || 'Transaction submission failed');
-    setIsSubmittingTx(false);
+    console.error('Anchor proof error:', err);
+
+    setError(
+      err.message || 'Failed to anchor proof on blockchain.'
+    );
   }
 };
   const connectMetaMask = () => connect({ connector: 'metaMask' });
@@ -342,14 +341,54 @@ const handleSubmit = async (e) => {
               </button>
             ) : (
               <button
-                onClick={handleAnchorOnChain}
-                disabled={isSubmittingTx || isConfirming || anchorSuccess}
-              >
-                {isSubmittingTx && 'Confirm in Wallet...'}
-                {isConfirming && 'Mining Transaction...'}
-                {anchorSuccess && '✅ Anchored On-Chain'}
-                {!isSubmittingTx && !isConfirming && !anchorSuccess && 'Anchor Proof to Blockchain'}
-              </button>
+  type="button"
+  onClick={handleAnchorOnChain}
+  disabled={walletSubmittingTx || walletConfirmingTx || anchorSuccess}
+  className={`
+    w-full
+    mt-4
+    px-5
+    py-3
+    rounded-xl
+    border
+    font-semibold
+    transition-all
+    duration-200
+    flex
+    items-center
+    justify-center
+    gap-2
+    ${
+      anchorSuccess
+        ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400 cursor-default'
+        : walletSubmittingTx || walletConfirmingTx
+        ? 'bg-slate-800 border-slate-700 text-slate-400 cursor-wait'
+        : 'bg-cyan-500/10 border-cyan-400/50 text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-300 hover:text-cyan-200 cursor-pointer'
+    }
+  `}
+>
+  {anchorSuccess ? (
+    <>
+      <CheckCircle2 size={18} />
+      Anchored On-Chain
+    </>
+  ) : walletSubmittingTx ? (
+    <>
+      <span className="animate-spin">⟳</span>
+      Confirm in Wallet...
+    </>
+  ) : walletConfirmingTx ? (
+    <>
+      <span className="animate-spin">⟳</span>
+      Mining Transaction...
+    </>
+  ) : (
+    <>
+      <Lock size={18} />
+      Anchor Proof to Blockchain
+    </>
+  )}
+</button>
             )}
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { createPublicClient, http } from 'viem';
-import { sepolia, mainnet, hardhat, polygon, arbitrum } from 'viem/chains';
+import { sepolia, mainnet, hardhat, polygon, arbitrum} from 'viem/chains';
 import { PROOF_REGISTRY_ADDRESS, PROOF_REGISTRY_ABI, PROOF_REGISTRY_CHAIN_ID } from '../config/contract.js';
 
 // Select chain object based on configured chain ID

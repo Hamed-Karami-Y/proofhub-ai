@@ -31,6 +31,11 @@ export async function getAuditApi(id) {
   const response = await apiClient.get(`/audit/${id}`);
   return response.data;
 }
+export const getAuditByIdApi = async (auditId) => {
+  const response = await fetch(`/audit/${auditId}`);
+  if (!response.ok) throw new Error('Audit not found');
+  return response.json();
+};
 
 export async function verifyAuditApi({ auditId, proofHash }) {
   const response = await apiClient.post('/audit/verify', { auditId, proofHash });
