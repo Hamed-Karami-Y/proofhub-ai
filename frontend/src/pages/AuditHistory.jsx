@@ -13,6 +13,7 @@ export default function AuditHistory() {
   const [selectedAudit, setSelectedAudit] = useState(null);
   const [copiedHash, setCopiedHash] = useState(null);
 
+  
   const fetchAudits = async () => {
     setLoading(true);
     setError(null);
@@ -39,12 +40,19 @@ export default function AuditHistory() {
     setTimeout(() => setCopiedHash(null), 2000);
   };
 
-  const filteredAudits = audits.filter(
-    (a) =>
-      a.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      a.proofHash.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      a.prompt.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // const filteredAudits = audits.filter(
+  //   (a) =>
+  //     a.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     a.proofHash.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     a.prompt.toLowerCase().includes(searchQuery.toLowerCase())
+  // );
+
+  // خط 44
+const filteredAudits = audits.filter(
+  (a) =>
+    (a?.auditRecordId && a.auditRecordId.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (a?.proofHash && a.proofHash.toLowerCase().includes(searchQuery.toLowerCase()))
+);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -125,13 +133,12 @@ export default function AuditHistory() {
               </thead>
               <tbody className="divide-y divide-slate-800/60 text-xs">
                 {filteredAudits.map((audit) => {
-                  const isVerified = audit.status === 'verified' || audit.status === 'registered';
-
+                  const isVerified = audit.blockchainVerified === true;
                   return (
-                    <tr key={audit.id} className="hover:bg-slate-800/40 transition-colors">
+                    <tr key={audit.auditRecordId} className="hover:bg-slate-800/40 transition-colors">
                       {/* Audit ID */}
                       <td className="py-4 px-4 font-mono font-semibold text-slate-200 whitespace-nowrap">
-                        {audit.id}
+                        {audit.auditRecordId}
                       </td>
 
                       {/* Model */}
@@ -141,7 +148,7 @@ export default function AuditHistory() {
 
                       {/* Created Date */}
                       <td className="py-4 px-4 text-slate-300 whitespace-nowrap">
-                        {formatDate(audit.timestamp)}
+                        {formatDate(audit.createdAt)}
                       </td>
 
                       {/* Proof Hash */}
@@ -192,7 +199,7 @@ export default function AuditHistory() {
                           </button>
 
                           <Link
-                            to={`/verify?auditId=${audit.id}`}
+                            to={`/verify?auditId=${audit.proofHash}`}
                             className="px-2.5 py-1.5 bg-cyan-950 hover:bg-cyan-900 text-cyan-300 rounded-lg text-xs font-medium flex items-center gap-1 border border-cyan-800/60"
                           >
                             <ExternalLink className="w-3.5 h-3.5 text-cyan-400" />
@@ -229,7 +236,7 @@ export default function AuditHistory() {
             <div className="space-y-4 text-xs font-mono">
               <div>
                 <span className="text-slate-500 uppercase tracking-wider block mb-1">Audit ID</span>
-                <p className="text-slate-200 bg-slate-950 p-2.5 rounded-lg border border-slate-800">{selectedAudit.id}</p>
+                <p className="text-slate-200 bg-slate-950 p-2.5 rounded-lg border border-slate-800">{selectedAudit.auditRecordId}</p>
               </div>
 
               <div>
@@ -258,7 +265,7 @@ export default function AuditHistory() {
                 Close
               </button>
               <Link
-                to={`/verify?auditId=${selectedAudit.id}`}
+                to={`/verify?auditId=${selectedAudit.proofHash}`}
                 className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-semibold"
               >
                 Go to Verification Page

@@ -60,33 +60,58 @@ export function useWallet() {
   };
 
   // Register proof on smart contract
-  const registerProof = async (proofHash) => {
-    setWalletError(null);
-    resetTx();
+ const registerProof = async (proofHash) => {
+  setWalletError(null);
+  resetTx();
 
-    if (!isConnected) {
-      throw new Error('Please connect your Web3 wallet first.');
-    }
+  if (!isConnected) {
+    throw new Error('Please connect your Web3 wallet first.');
+  }
 
-    const formattedHash = formatBytes32Hash(proofHash);
-
+  // Ensure wallet is on the correct network
+  if (!chain || chain.id !== PROOF_REGISTRY_CHAIN_ID) {
     try {
-      writeContract({
-        address: PROOF_REGISTRY_ADDRESS,
-        abi: PROOF_REGISTRY_ABI,
-        functionName: 'registerProof',
-        args: [formattedHash],
+      await switchChain({
+        chainId: PROOF_REGISTRY_CHAIN_ID,
       });
     } catch (err) {
-      console.error('Write contract error:', err);
-      let msg = err.message || 'Failed to send transaction.';
-      if (msg.includes('user rejected') || msg.includes('User rejected')) {
-        msg = 'Transaction was rejected in wallet.';
-      }
-      setWalletError(msg);
-      throw new Error(msg);
+      console.error('Network switch error:', err);
+
+      const message =
+        err?.message?.toLowerCase().includes('reject')
+          ? 'Network switch was rejected in wallet.'
+          : `Please switch your wallet to the required network (Chain ID: ${PROOF_REGISTRY_CHAIN_ID}).`;
+
+      setWalletError(message);
+      throw new Error(message);
     }
-  };
+  }
+
+  const formattedHash = formatBytes32Hash(proofHash);
+
+  try {
+    writeContract({
+      address: PROOF_REGISTRY_ADDRESS,
+      abi: PROOF_REGISTRY_ABI,
+      functionName: 'registerProof',
+      args: [formattedHash],
+    });
+  } catch (err) {
+    console.error('Write contract error:', err);
+
+    let msg = err.message || 'Failed to send transaction.';
+
+    if (
+      msg.includes('user rejected') ||
+      msg.includes('User rejected')
+    ) {
+      msg = 'Transaction was rejected in wallet.';
+    }
+
+    setWalletError(msg);
+    throw new Error(msg);
+  }
+};
 
   const isWrongNetwork = isConnected && chain && chain.id !== PROOF_REGISTRY_CHAIN_ID;
 

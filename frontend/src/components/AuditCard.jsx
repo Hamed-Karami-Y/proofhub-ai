@@ -1,46 +1,62 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatHash, formatDate, copyToClipboard } from '../utils/format.js';
-import { ShieldCheck, Copy, Check, ExternalLink, Cpu, Clock, Hash, FileText } from 'lucide-react';
+import {
+  ShieldCheck,
+  Copy,
+  Check,
+  ExternalLink,
+  Cpu,
+  Clock,
+  Hash,
+  FileText,
+  RefreshCw,
+} from 'lucide-react';
 
-export default function AuditCard({ audit, onVerifyOnChain }) {
+export default function AuditCard({ audit, onVerifyOnChain ,isAnchoring, isPending,}) {
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  
 
   const handleCopyHash = async (e) => {
     e.stopPropagation();
+
     if (audit?.proofHash) {
       await copyToClipboard(audit.proofHash);
       setCopied(true);
+
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
   if (!audit) return null;
 
-  const isVerified = audit.status === 'verified' || audit.status === 'registered' || audit.txHash;
+  // Backend now returns blockchainVerified as the source of truth.
+  const isVerified = audit.blockchainVerified === true;
 
   return (
     <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-5 hover:border-slate-700/80 transition-all shadow-xl hover:shadow-cyan-950/10 flex flex-col justify-between">
       <div>
-        {/* Header line: ID & Status Badge */}
+
+        {/* Header */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-2">
             <span className="p-1.5 rounded-lg bg-cyan-950/60 border border-cyan-800/40 text-cyan-400">
               <ShieldCheck className="w-4 h-4" />
             </span>
+
             <div>
               <span className="font-mono text-xs font-semibold text-slate-200 tracking-tight block">
-                {audit.id}
+                {audit.auditRecordId || 'N/A'}
               </span>
+
               <span className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
                 <Clock className="w-3 h-3 text-slate-500" />
-                {formatDate(audit.timestamp)}
+                {audit.createdAt ? formatDate(audit.createdAt) : 'N/A'}
               </span>
             </div>
           </div>
 
+          {/* Status */}
           <span
             className={`px-2.5 py-1 rounded-full text-[11px] font-medium border flex items-center gap-1.5 ${
               isVerified
@@ -50,55 +66,84 @@ export default function AuditCard({ audit, onVerifyOnChain }) {
           >
             <span
               className={`w-1.5 h-1.5 rounded-full ${
-                isVerified ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'
+                isVerified
+                  ? 'bg-emerald-400'
+                  : 'bg-amber-400 animate-pulse'
               }`}
             />
-            {isVerified ? 'Verified On-Chain' : 'Pending Blockchain'}
+
+            {isVerified
+              ? 'Verified On-Chain'
+              : 'Pending Blockchain'}
           </span>
         </div>
 
-        {/* Model Badge & Hash line */}
+        {/* Model & Hash */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 my-3 p-3 bg-slate-950/60 rounded-xl border border-slate-800/60 text-xs">
+
+          {/* Model */}
           <div className="flex items-center gap-2 text-slate-300">
             <Cpu className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-            <span className="text-slate-400">Model:</span>
-            <span className="font-mono text-slate-200">{audit.model || 'gemini-2.5-flash'}</span>
+
+            <span className="text-slate-400">
+              Model:
+            </span>
+
+            <span className="font-mono text-slate-200 truncate">
+              {audit.model || 'N/A'}
+            </span>
           </div>
 
+          {/* Proof Hash */}
           <div className="flex items-center justify-between text-slate-300">
-            <div className="flex items-center gap-1.5 font-mono text-slate-300">
+            <div className="flex items-center gap-1.5 font-mono text-slate-300 min-w-0">
               <Hash className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-              <span>{formatHash(audit.proofHash)}</span>
+
+              <span className="truncate">
+                {audit.proofHash
+                  ? formatHash(audit.proofHash)
+                  : 'N/A'}
+              </span>
             </div>
+
             <button
               onClick={handleCopyHash}
-              className="text-slate-400 hover:text-cyan-400 transition-colors p-1"
+              className="text-slate-400 hover:text-cyan-400 transition-colors p-1 shrink-0"
               title="Copy Proof Hash"
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? (
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+              ) : (
+                <Copy className="w-3.5 h-3.5" />
+              )}
             </button>
           </div>
         </div>
 
-        {/* Prompt Preview */}
+        {/* Prompt */}
         <div className="mt-3">
           <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
             <FileText className="w-3.5 h-3.5 text-slate-500" />
             <span>Prompt:</span>
           </div>
+
           <p className="text-xs text-slate-200 bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/40 line-clamp-2 italic font-sans">
-            "{audit.prompt}"
+            {audit.prompt
+              ? `"${audit.prompt}"`
+              : 'No prompt data available'}
           </p>
         </div>
 
-        {/* AI Response Preview (Expandable) */}
+        {/* AI Response */}
         {audit.aiResponse && (
           <div className="mt-3">
             <button
               onClick={() => setExpanded(!expanded)}
               className="text-[11px] text-cyan-400 hover:text-cyan-300 transition-colors font-medium cursor-pointer"
             >
-              {expanded ? 'Hide AI Audit Analysis ▲' : 'Show AI Audit Analysis ▼'}
+              {expanded
+                ? 'Hide AI Audit Analysis ▲'
+                : 'Show AI Audit Analysis ▼'}
             </button>
 
             {expanded && (
@@ -110,24 +155,53 @@ export default function AuditCard({ audit, onVerifyOnChain }) {
         )}
       </div>
 
-      {/* Action Buttons */}
+      {/* Actions */}
       <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-800/60">
+
+        {/* Verify */}
         <Link
-          to={`/verify?auditId=${audit.id}`}
+          to={`/verify?auditId=${audit.proofHash}`}
           className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition-colors border border-slate-700/60"
         >
           <ExternalLink className="w-3.5 h-3.5 text-cyan-400" />
           <span>Verify Proof</span>
         </Link>
 
-        {onVerifyOnChain && !isVerified && (
-          <button
-            onClick={() => onVerifyOnChain(audit)}
-            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-medium transition-colors shadow-md cursor-pointer"
-          >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Anchor to Web3</span>
-          </button>
+        {/* Anchor */}
+        {onVerifyOnChain && (
+          isVerified ? (
+            <button
+              type="button"
+              disabled
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-950/40 text-emerald-400 rounded-lg text-xs font-medium border border-emerald-800/50 cursor-not-allowed"
+            >
+              <Check className="w-3.5 h-3.5" />
+              <span>Anchored On-Chain</span>
+            </button>
+          ) : (
+            <button
+  type="button"
+  onClick={() => onVerifyOnChain(audit)}
+  disabled={isAnchoring}
+  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors shadow-md ${
+    isAnchoring
+      ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+      : 'bg-cyan-600 hover:bg-cyan-500 text-white cursor-pointer'
+  }`}
+>
+  {isPending ? (
+    <>
+      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+      <span>Anchoring...</span>
+    </>
+  ) : (
+    <>
+      <ShieldCheck className="w-3.5 h-3.5" />
+      <span>Anchor to Web3</span>
+    </>
+  )}
+</button>
+          )
         )}
       </div>
     </div>

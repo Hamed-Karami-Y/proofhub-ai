@@ -1,6 +1,6 @@
 ﻿namespace backend.Services.AI
 {
-    public class DeepSeekChatResponse
+    public class GroqChatResponse
     {
         public List<Choice> Choices { get; set; } = [];
     }

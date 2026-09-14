@@ -11,13 +11,50 @@ using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var blockchainSection = builder.Configuration.GetSection("Blockchain");
-if (!blockchainSection.Exists())
+builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+
+builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
+
+if (builder.Environment.IsDevelopment())
 {
-    throw new InvalidOperationException("Blockchain configuration section is missing!");
+    builder.Configuration.AddUserSecrets<Program>();
+}
+
+builder.Configuration.AddEnvironmentVariables();
+
+
+var blockchainSection = builder.Configuration.GetSection("Blockchain");
+
+if (!blockchainSection.Exists() || string.IsNullOrEmpty(blockchainSection["RpcUrl"]))
+{
+    var rpcUrl = Environment.GetEnvironmentVariable("Blockchain__RpcUrl");
+    var network = Environment.GetEnvironmentVariable("Blockchain__Network") ?? "Mainnet";
+
+    if (!string.IsNullOrEmpty(rpcUrl))
+    {
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string>
+        {
+            ["Blockchain:RpcUrl"] = rpcUrl,
+            ["Blockchain:Network"] = network
+        });
+
+        blockchainSection = builder.Configuration.GetSection("Blockchain");
+
+        Console.WriteLine($"✅ Blockchain loaded from Environment Variables: RpcUrl={rpcUrl}");
+    }
+    else
+    {
+        throw new InvalidOperationException(
+            "Blockchain configuration is missing! Please set either:\n" +
+            "1. 'Blockchain:RpcUrl' in appsettings.json\n" +
+            "2. 'Blockchain__RpcUrl' Environment Variable\n" +
+            "3. User-Secrets (only in Development)"
+        );
+    }
 }
 
 builder.Services.Configure<BlockchainSettings>(blockchainSection);
+
 
 builder.Services.AddCors(options =>
 {
@@ -26,9 +63,12 @@ builder.Services.AddCors(options =>
         {
             policy.WithOrigins(
                     "http://localhost:3000",
+                    "http://127.0.0.1:3000",
                     "http://localhost:4200",
                     "http://localhost:5173",
-                    "https://proofhub-ai.yukaha.com"
+                    "http://localhost:5174",
+                    "https://proofhub-ai.yukaha.com",
+                    "https://api-proofhub-ai.yukaha.com"
                 )
                 .WithMethods("GET", "POST", "PUT", "DELETE")
                 .WithHeaders(
@@ -59,7 +99,6 @@ builder.Services.AddApplicationServices();
 builder.Services.AddHttpClient();
 
 builder.Services.AddAuthorization();
-builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c =>
@@ -74,17 +113,25 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 
-
-if (app.Environment.IsDevelopment())
+// اگر میخوای همیشه فعال باشه:
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+    // اگر برنامه در زیرمسیر هست:
+    // c.RoutePrefix = "swagger";
+});
 
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHsts();
-}
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseSwagger();
+//    app.UseSwaggerUI();
+//}
+
+//if (!app.Environment.IsDevelopment())
+//{
+//    app.UseHsts();
+//}
 
 app.UseHttpsRedirection();
 app.UseRouting();

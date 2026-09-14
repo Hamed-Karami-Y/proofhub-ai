@@ -3,12 +3,12 @@ using backend.Models.AI;
 
 namespace backend.Services.AI
 {
-    public class DeepSeekProvider : IAIProvider
+    public class GroqProvider : IAIProvider
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
 
-        public DeepSeekProvider(
+        public GroqProvider(
             HttpClient httpClient,
             IConfiguration configuration)
         {
@@ -43,9 +43,19 @@ namespace backend.Services.AI
                 "https://api.groq.com/openai/v1/chat/completions", 
                 request);
 
+            var body = await response.Content.ReadAsStringAsync();
+
+            Console.WriteLine($"AI STATUS: {(int)response.StatusCode}");
+            Console.WriteLine($"AI BODY: {body}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException(
+                    $"AI API failed: {(int)response.StatusCode} - {body}");
+            }
             response.EnsureSuccessStatusCode();
 
-            var result = await response.Content.ReadFromJsonAsync<DeepSeekChatResponse>();
+            var result = await response.Content.ReadFromJsonAsync<GroqChatResponse>();
 
             return new AIResponse
             {

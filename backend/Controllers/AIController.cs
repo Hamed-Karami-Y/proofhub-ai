@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace backend.Controllers
 {
     [ApiController]
-    [Route("api/ai")]
+    [Route("ai")]
     public class AIController : ControllerBase
     {
         private readonly IAuditService _auditService;

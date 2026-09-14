@@ -18,12 +18,14 @@ export default function Dashboard() {
   const { sendTransactionAsync, data: txHash } = useSendTransaction();
   const { isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: txHash });
   const [pendingAudit, setPendingAudit] = useState(null);
+  const [isAnchoring, setIsAnchoring] = useState(false);
 
-useEffect(() => {
+  useEffect(() => {
     if (isConfirmed && txHash && pendingAudit) {
       const confirm = async () => {
-        await confirmBlockchain(pendingAudit.id, txHash, PROOF_REGISTRY_ADDRESS);
+        await confirmBlockchain(pendingAudit.auditRecordId, txHash, PROOF_REGISTRY_ADDRESS);
         setPendingAudit(null);
+        setIsAnchoring(false);
         await fetchAudits();
         alert('✅ Proof anchored!');
       };
@@ -52,41 +54,44 @@ useEffect(() => {
   }, []);
 
   // قبل از استفاده، این تابع را تعریف کنید
-function formatToBytes32(hash) {
-  // اگر 0x در ابتدا نیست، اضافه کن
-  let clean = hash.startsWith('0x') ? hash : '0x' + hash;
-  // اگر طول کمتر از 66 کاراکتر است (0x + 64)، با 0 پر کن
-  while (clean.length < 66) {
-    clean = clean.slice(0, 2) + '0' + clean.slice(2);
+  function formatToBytes32(hash) {
+    // اگر 0x در ابتدا نیست، اضافه کن
+    let clean = hash.startsWith('0x') ? hash : '0x' + hash;
+    // اگر طول کمتر از 66 کاراکتر است (0x + 64)، با 0 پر کن
+    while (clean.length < 66) {
+      clean = clean.slice(0, 2) + '0' + clean.slice(2);
+    }
+    // اگر بیشتر است، کوتاه کن
+    return clean.slice(0, 66);
   }
-  // اگر بیشتر است، کوتاه کن
-  return clean.slice(0, 66);
-}
 
   const handleVerifyOnChain = async (audit) => {
+    
     if (!address) {
       alert('Please connect wallet first.');
       return;
     }
-    setPendingAudit(audit);
+   setPendingAudit(audit);
+   setIsAnchoring(true);
     try {
       const formattedHash = formatToBytes32(audit.proofHash);
 
-const tx = await sendTransactionAsync({
-  to: PROOF_REGISTRY_ADDRESS,
-  data: new ethers.Interface(PROOF_REGISTRY_ABI).encodeFunctionData('registerProof', [formattedHash]),
-});
+      const tx = await sendTransactionAsync({
+        to: PROOF_REGISTRY_ADDRESS,
+        data: new ethers.Interface(PROOF_REGISTRY_ABI).encodeFunctionData('registerProof', [formattedHash]),
+      });
     } catch (err) {
       console.error(err);
       setPendingAudit(null);
+      setIsAnchoring(false);
     }
   };
 
   const totalAudits = audits.length;
-  const verifiedCount = audits.filter(a => a.status === 'verified' || a.status === 'registered').length;
+  const verifiedCount = audits.filter(a => a.blockchainVerified === true).length;
   const pendingCount = totalAudits - verifiedCount;
 
-  
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header Banner */}
@@ -103,6 +108,7 @@ const tx = await sendTransactionAsync({
 
         <div className="flex items-center gap-3">
           <button
+          disabled={isAnchoring}
             onClick={fetchAudits}
             className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700/80 transition-colors cursor-pointer"
             title="Refresh Audits"
@@ -112,6 +118,9 @@ const tx = await sendTransactionAsync({
 
           <Link
             to="/create"
+            onClick={(e) => {
+    if (isAnchoring) e.preventDefault();
+  }}
             className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-medium text-sm rounded-xl shadow-lg shadow-cyan-950/30 transition-all"
           >
             <PlusCircle className="w-4 h-4" />
@@ -235,10 +244,12 @@ const tx = await sendTransactionAsync({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {audits.slice(0, 6).map((audit) => (
               <AuditCard
-                key={audit.id}
-                audit={audit}
-                onVerifyOnChain={handleVerifyOnChain}
-              />
+  key={audit.auditRecordId}
+  audit={audit}
+  onVerifyOnChain={handleVerifyOnChain}
+  isAnchoring={isAnchoring}
+  isPending={pendingAudit?.auditRecordId === audit.auditRecordId}
+/>
             ))}
           </div>
         )}
