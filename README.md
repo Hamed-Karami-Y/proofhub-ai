@@ -128,9 +128,9 @@ The current implementation is a functional proof-of-concept demonstrating the co
 
 Documentation
 
-* [Architecture](./Docs/architecture.md)
-* [API](./Docs/api.md)
-* [Audit Object](./Docs/audit-object.md)
-* [Smart Contract](./Docs/contract.md)
-* [MVP Scope](./Docs/mvp.md)
-* [Workflow](./Docs/workflow.md)
+* [Architecture](./docs/architecture.md)
+* [API](./docs/api.md)
+* [Audit Object](./docs/audit-object.md)
+* [Smart Contract](./docs/contract.md)
+* [MVP Scope](./docs/mvp.md)
+* [Workflow](./docs/workflow.md)
