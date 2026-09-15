@@ -6,7 +6,7 @@ Proof Registry
 
 The smart contract provides the on-chain registry for ProofHub AI proofs.
 
-Network : Base Sepolia
+Network : Sepolia
 
 Chain ID : 11155111
 
@@ -62,7 +62,7 @@ Proof Hash
      ↓
 registerProof(bytes32)
      ↓
-Base Sepolia
+Sepolia
      ↓
 verifyProof(bytes32)
 
