@@ -1,23 +1,136 @@
-# ProofHub AI
+ProofHub AI
 
-ProofHub AI is a verifiable AI audit infrastructure that enables organizations and developers to generate tamper-proof cryptographic proofs for AI workflows.
+Verifiable AI Audit Infrastructure
 
-## Features
+ProofHub AI is a verifiable AI audit infrastructure that creates tamper-proof cryptographic evidence for AI-driven workflows.
 
-- AI Audit Trail
-- Blockchain Anchoring
-- Proof Verification
-- Wallet Authentication
-- AI Workflow Integrity
+Instead of asking users to trust AI-generated results, ProofHub AI creates an audit record for each AI execution, generates cryptographic proofs, and anchors the proof on the blockchain.
 
-## Tech Stack
+This allows users and third parties to independently verify that a recorded AI result has not been altered after execution.
 
-- React
-- ASP.NET Core
-- Solidity
-- Base
-- OpenAI
+Don't Trust AI. Verify Every Decision.
 
-## Status
+Features
 
-🚧 Hackathon MVP (ChainHack 2026)
+* AI Audit Trail
+* Cryptographic Proof Generation
+* Blockchain Anchoring
+* On-Chain Proof Verification
+* Wallet-Based Ownership
+* AI Workflow Integrity
+
+How It Works
+
+User
+ ↓
+Wallet Connection
+ ↓
+AI Audit Request
+ ↓
+AI Provider
+ ↓
+Audit Record Generation
+ ↓
+Proof Hash
+ ↓
+Blockchain Anchoring
+ ↓
+Independent Verification
+
+
+Tech Stack
+
+Frontend
+
+* React
+* Vite
+* Wagmi
+* Viem
+
+Backend
+
+* ASP.NET Core
+* Entity Framework Core
+* SQL Server
+
+AI
+
+* Groq API
+* AI model provider abstraction
+
+Blockchain
+
+* Solidity
+* Base Sepolia
+* Proof Registry Smart Contract
+
+Core Concept
+
+ProofHub AI does not store sensitive documents or AI responses directly on-chain.
+
+Instead, the system creates an audit record containing information such as:
+
+* Audit ID
+* Input / prompt information
+* AI model metadata
+* Output information
+* Cryptographic proof hash
+* Timestamp
+* Wallet address
+* Blockchain transaction information
+
+The proof hash is anchored on-chain through the Proof Registry smart contract.
+
+Verification
+
+A proof can be verified using its cryptographic proof hash.
+
+The verification process checks:
+
+1. The audit record.
+2. The generated proof.
+3. The blockchain record.
+4. The existence of the registered proof on-chain.
+
+This makes the result independently verifiable without exposing sensitive application data.
+
+MVP Scope
+
+Included
+
+* Wallet connection
+* AI audit request
+* AI-generated result
+* Audit record creation
+* Cryptographic proof generation
+* Proof hash
+* Blockchain anchoring
+* On-chain verification
+* Audit history
+
+Excluded from the current MVP
+
+* Organization management
+* Teams and roles
+* Permission management
+* Reputation systems
+* Notifications
+* Advanced analytics
+* Multi-provider AI orchestration
+* Public SDK
+* Enterprise administration
+
+Project Status
+
+**Hackathon MVP — ChainHack 2026**
+
+The current implementation is a functional proof-of-concept demonstrating the complete flow from AI execution to blockchain anchoring and verification.
+
+Documentation
+
+* [Architecture](./Docs/architecture.md)
+* [API](./Docs/api.md)
+* [Audit Object](./Docs/audit-object.md)
+* [Smart Contract](./Docs/contract.md)
+* [MVP Scope](./Docs/mvp.md)
+* [Workflow](./Docs/workflow.md)
