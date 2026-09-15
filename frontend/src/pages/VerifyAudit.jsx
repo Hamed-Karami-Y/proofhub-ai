@@ -41,13 +41,11 @@ const isHexHash = (str) => {
     // اگر ورودی GUID بود (auditId)
     if (isGuid(query)) {
       // ۱. اول اطلاعات audit رو با id بگیر
-      const auditResponse = await getAuditByIdApi(query);
-      console.log("auditResponse : ", auditResponse);
-      // const auditData = await getAuditByIdApi(query);
-      if (!auditResponse.ok) {
+      const auditData = await getAuditByIdApi(query);
+
+      if (!auditData) {
         throw new Error('Audit not found');
       }
-      const auditData = await auditResponse.json();
       
       if (!auditData || !auditData.proofHash) {
         throw new Error('Audit has no proof hash');
@@ -77,10 +75,15 @@ const isHexHash = (str) => {
     setVerificationResult(transformedResult);
 
     // Query Smart Contract On-Chain Proof
-    if (proofHash) {
-      const chainRes = await verifyProofOnChain(proofHash);
-      setOnChainData(chainRes);
-    }
+    // Query Smart Contract On-Chain Proof
+if (proofHash) {
+  const normalizedProofHash = proofHash.startsWith('0x')
+    ? proofHash
+    : `0x${proofHash}`;
+
+  const chainRes = await verifyProofOnChain(normalizedProofHash);
+  setOnChainData(chainRes);
+}
   } catch (err) {
     console.error('Verification error:', err);
     setError(err.message || 'Verification failed for the given query.');
@@ -108,7 +111,10 @@ const isHexHash = (str) => {
     handleVerify();
   };
 
-  const isSuccess = verificationResult?.verified && (verificationResult?.details?.proofExists || onChainData?.exists);
+  const isOffChainVerified = verificationResult?.verified === true;
+  const isOnChainVerified = onChainData?.exists === true;
+
+  const isSuccess = isOffChainVerified && isOnChainVerified;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
@@ -192,8 +198,17 @@ const isHexHash = (str) => {
                 </div>
 
                 <div className="flex items-center gap-2 text-xs font-mono">
-                  <CheckCircle2 className={`w-4 h-4 ${onChainData?.exists || verificationResult.verified ? 'text-emerald-400' : 'text-amber-400'}`} />
-                  <span>{onChainData?.exists ? 'On-Chain Confirmed' : 'Off-Chain Verified'}</span>
+                  <CheckCircle2
+  className={`w-4 h-4 ${
+    onChainData?.exists ? 'text-emerald-400' : 'text-red-400'
+  }`}
+/>
+
+<span>
+  {onChainData?.exists
+    ? 'On-Chain Confirmed'
+    : 'On-Chain Not Found'}
+</span>
                 </div>
 
                 <div className="flex items-center gap-2 text-xs font-mono">
