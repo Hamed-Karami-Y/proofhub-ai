@@ -27,7 +27,7 @@ Audit Record
 Blockchain
 
 * Proof Registry smart contract
-* Base Sepolia deployment
+* Sepolia deployment
 * Proof registration
 * On-chain proof lookup
 

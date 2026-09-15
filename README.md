@@ -61,7 +61,7 @@ AI
 Blockchain
 
 * Solidity
-* Base Sepolia
+* Sepolia
 * Proof Registry Smart Contract
 
 Core Concept

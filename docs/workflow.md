@@ -38,7 +38,7 @@ ProofHub AI Workflow
 
 	The user selects *Anchor to Web3*.
 
-	The frontend submits the proof hash to the Proof Registry smart contract on Base Sepolia.
+	The frontend submits the proof hash to the Proof Registry smart contract on Sepolia.
 
 	The user confirms the transaction in the wallet.
 

@@ -58,7 +58,7 @@ It associates the execution with:
 
 Smart Contract
 
-The Proof Registry smart contract is deployed on Base Sepolia.
+The Proof Registry smart contract is deployed on Sepolia.
 
 Its responsibility is to register and verify proof hashes on-chain.
 
@@ -80,6 +80,6 @@ Proof Hash
    ↓
 Proof Registry Contract
    ↓
-Base Sepolia
+Sepolia
    ↓
 Verification
