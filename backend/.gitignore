@@ -1,0 +1,123 @@
+# .NET build outputs
+/bin/
+/obj/
+/publish/
+*.user
+*.userosscache
+*.vs/
+*.suo
+*.userprefs
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# Visual Studio
+.vs/
+*.swp
+*.tmp
+*.tmp_proj
+*.pidb
+*.psess
+*.vsp
+*.vspx
+*.ncrunchsolution
+*.bak
+*.cache
+*.pidb
+*.log
+*.tlog
+*.exe
+*.dll
+*.so
+*.pdb
+*.mdb
+*.pyc
+
+# User-specific files
+*.rsuser
+*.csproj.user
+*.vbproj.user
+*.fsproj.user
+*.dbproj.user
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]in/
+[Oo]bj/
+[Ll]ogs/
+
+# NuGet packages
+*.nupkg
+*.snupkg
+/packages/
+packages/
+!packages/repositories.config
+
+# .NET Core / .NET 5+
+/out/
+/appsettings.Development.json
+/appsettings.Local.json
+/appsettings.*.local.json
+
+# Environment variables
+.env
+*.env.local
+
+# Logs
+/logs/
+*.log
+*.logs
+
+# Diagnostic files
+*.diag
+
+# Test results
+/TestResults/
+*.trx
+*.coverage
+*.coveragexml
+*.dotCover
+
+# Publish profile
+*.pubxml.user
+*.pubxml
+!.pubxml
+
+# Certificates
+*.pfx
+*.p12
+
+# SQLite / local DBs
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.mdf
+*.ldf
+
+# Temp files
+*.tmp
+*.temp
+*.cache
+
+# Docker
+*.dockerignore
+*.containerignore
+.docker/
+docker-compose.override.yml
+docker-compose.local.yml
+
+# User Secrets 
+**/secrets.json
+**/UserSecrets/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# MacOS
+.DS_Store
